@@ -48,7 +48,7 @@ const Header = () => {
   );
 
   return (
-    <header className="sticky top-0 z-50 rounded-b-2xl shadow-lg">
+    <header className="sticky top-0 z-50 bg-[#ffffffa7] backdrop-blur-sm">
       <div className="navbar py-4 sm:w-10/12 w-11/12 mx-auto flex items-center">
         {/* Left: Logo and mobile menu */}
         <div className="navbar-start">
