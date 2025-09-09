@@ -3,8 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import AOS from "aos";
 import "aos/dist/aos.css";
+import usePageTitle from "../../hooks/usePageTitle";
 
 const MangoCategory = () => {
+  usePageTitle("Fresh Mangoes Collection");
+
   const [mangoes, setMangoes] = useState([]);
   const [filteredMangoes, setFilteredMangoes] = useState([]);
   const [loading, setLoading] = useState(true);

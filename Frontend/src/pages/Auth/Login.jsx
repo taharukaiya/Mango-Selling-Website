@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import usePageTitle from "../../hooks/usePageTitle";
 
 const Login = () => {
+  usePageTitle("Login");
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -246,17 +249,6 @@ const Login = () => {
                 </>
               )}
             </button>
-
-            {/* Forgot Password */}
-            <div className="text-center">
-              <button
-                type="button"
-                className="text-sm text-[#339059] hover:text-[#287346] font-medium transition-colors duration-200"
-                disabled
-              >
-                Forgot your password?
-              </button>
-            </div>
           </form>
 
           {/* Divider */}

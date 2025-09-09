@@ -1,7 +1,10 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import usePageTitle from "../../hooks/usePageTitle";
 
 const Orders = () => {
+  usePageTitle("My Orders");
+
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);

@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import usePageTitle from "../../hooks/usePageTitle";
 
 const Profile = () => {
+  usePageTitle("My Profile");
+
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState({
     image_url: "",

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import usePageTitle from "../../hooks/usePageTitle";
 
 const initialForm = {
   name: "",
@@ -9,6 +10,8 @@ const initialForm = {
 };
 
 const MangoCategoryAdmin = () => {
+  usePageTitle("Manage Mangoes");
+
   const [mangoes, setMangoes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

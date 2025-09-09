@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import usePageTitle from "../../hooks/usePageTitle";
 
 const Cart = () => {
+  usePageTitle("Shopping Cart");
+
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -246,12 +249,12 @@ const Cart = () => {
             </div>
           ))}
 
-          <div className="bg-[#339059] text-white rounded-lg p-6">
+          <div className="bg-white shadow-sm rounded-lg p-6 border border-gray-100">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">Total: ৳{getTotalPrice()}</h2>
+              <h2 className="text-xl font-bold">Total: ৳ {getTotalPrice()}</h2>
               <button
                 onClick={handleProceedToCheckout}
-                className="bg-[#FF5722] text-white px-8 py-3 rounded-lg hover:bg-[#E64A19] transition-colors text-lg font-semibold"
+                className="bg-[#339059] text-white px-8 py-3 rounded-lg hover:bg-[#1f5d39] transition-colors text-lg font-semibold"
               >
                 Proceed to Checkout
               </button>

@@ -55,7 +55,7 @@ const AdminLayout = () => {
   if (!isAdmin) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-100">
       <div className=" shadow">
         <div className="w-11/12 sm:10/12 mx-auto p-4 flex justify-between items-center">
           <div className="flex gap-4">

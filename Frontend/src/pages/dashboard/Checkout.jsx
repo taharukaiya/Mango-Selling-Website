@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import usePageTitle from "../../hooks/usePageTitle";
 
 const Checkout = () => {
+  usePageTitle("Checkout");
+
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState([]);
   const [profile, setProfile] = useState({});

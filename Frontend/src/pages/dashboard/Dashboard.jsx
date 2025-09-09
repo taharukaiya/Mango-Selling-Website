@@ -2,8 +2,11 @@ import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Cart from "./Cart";
 import Orders from "./Orders";
+import usePageTitle from "../../hooks/usePageTitle";
 
 function Dashboard() {
+  usePageTitle("Dashboard");
+
   const location = useLocation();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(() => {
