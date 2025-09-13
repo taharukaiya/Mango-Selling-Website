@@ -96,7 +96,7 @@ def user_profile(request):
     user = request.user
     
     if request.method == 'GET':
-        # Get or create user profile
+        # Get or create user profile (eita onek koshte thik korsi, kew kichu koirona r)
         profile, created = UserProfile.objects.get_or_create(user=user)
         profile_data = UserProfileSerializer(profile).data
         
