@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import MangoCategoryViewSet, CartItemViewSet, OrderViewSet, PaymentViewSet, register_user, CustomAuthToken, user_profile, add_to_cart, get_cart_items, create_order, get_user_orders, get_user_orders_with_items, update_cart_item, delete_cart_item, get_order_details, get_all_orders_with_details
+from .views import MangoCategoryViewSet, CartItemViewSet, OrderViewSet, PaymentViewSet, register_user, CustomAuthToken, user_profile, add_to_cart, get_cart_items, create_order, get_user_orders, get_user_orders_with_items, update_cart_item, delete_cart_item, get_order_details, get_all_orders_with_details, submit_order_feedback, get_order_feedback
 
 router = DefaultRouter()
 router.register(r'mangoes', MangoCategoryViewSet)
@@ -22,4 +22,6 @@ urlpatterns = [
     path('user-orders-with-items/', get_user_orders_with_items, name='get_user_orders_with_items'),
     path('order-details/<int:order_id>/', get_order_details, name='get_order_details'),
     path('admin-orders-details/', get_all_orders_with_details, name='get_all_orders_with_details'),
+    path('order/<int:order_id>/feedback/', submit_order_feedback, name='submit_order_feedback'),
+    path('order/<int:order_id>/get-feedback/', get_order_feedback, name='get_order_feedback'),
 ]

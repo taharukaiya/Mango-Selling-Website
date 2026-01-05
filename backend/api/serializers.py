@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import MangoCategory, Cart, CartItem, Order, OrderItem, Payment, UserProfile
+from .models import MangoCategory, Cart, CartItem, Order, OrderItem, Payment, UserProfile, OrderFeedback
 
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
@@ -38,24 +38,34 @@ class OrderItemSerializer(serializers.ModelSerializer):
     def get_subtotal(self, obj):
         return obj.quantity * obj.price
 
+
+class OrderFeedbackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderFeedback
+        fields = ['id', 'order', 'rating', 'comment', 'created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at']
+
+
 class OrderSerializer(serializers.ModelSerializer):
     user_name = serializers.CharField(source='user.username', read_only=True)
     user_email = serializers.CharField(source='user.email', read_only=True)
+    feedback = OrderFeedbackSerializer(read_only=True)
     
     class Meta:
         model = Order
         fields = ['id', 'user', 'user_name', 'user_email', 'total_amount', 'order_date', 'status', 
-                 'billing_address', 'shipping_address', 'phone_number', 'additional_phone', 'payment_method']
+                 'billing_address', 'shipping_address', 'phone_number', 'additional_phone', 'payment_method', 'feedback']
 
 class OrderWithItemsSerializer(serializers.ModelSerializer):
     user_name = serializers.CharField(source='user.username', read_only=True)
     user_email = serializers.CharField(source='user.email', read_only=True)
     items = OrderItemSerializer(source='orderitem_set', many=True, read_only=True)
+    feedback = OrderFeedbackSerializer(read_only=True)
     
     class Meta:
         model = Order
         fields = ['id', 'user', 'user_name', 'user_email', 'total_amount', 'order_date', 'status', 
-                 'billing_address', 'shipping_address', 'phone_number', 'additional_phone', 'payment_method', 'items']
+                 'billing_address', 'shipping_address', 'phone_number', 'additional_phone', 'payment_method', 'items', 'feedback']
 
 class PaymentSerializer(serializers.ModelSerializer):
     class Meta:

@@ -8,8 +8,8 @@ from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 from rest_framework.authtoken.views import ObtainAuthToken
 
-from .models import MangoCategory, Cart, CartItem, Order, OrderItem, Payment, UserProfile
-from .serializers import MangoCategorySerializer, CartItemSerializer, OrderSerializer, OrderWithItemsSerializer, PaymentSerializer, UserProfileSerializer
+from .models import MangoCategory, Cart, CartItem, Order, OrderItem, Payment, UserProfile, OrderFeedback
+from .serializers import MangoCategorySerializer, CartItemSerializer, OrderSerializer, OrderWithItemsSerializer, PaymentSerializer, UserProfileSerializer, OrderFeedbackSerializer
 
 class MangoCategoryViewSet(viewsets.ModelViewSet):
     queryset = MangoCategory.objects.all()
@@ -316,4 +316,77 @@ def get_all_orders_with_details(request):
     orders = Order.objects.all().order_by('-order_date').select_related('user').prefetch_related('orderitem_set__mango')
     serializer = OrderWithItemsSerializer(orders, many=True)
     return Response(serializer.data)
+
+
+# Submit or update feedback for an order
+@api_view(['POST', 'PUT'])
+@permission_classes([IsAuthenticated])
+def submit_order_feedback(request, order_id):
+    try:
+        # Ensure the order belongs to the user
+        order = Order.objects.get(id=order_id, user=request.user)
+        
+        # Check if order is delivered
+        if order.status.lower() != 'delivered':
+            return Response({
+                'error': 'Feedback can only be submitted for delivered orders'
+            }, status=400)
+        
+        # Validate rating first
+        rating = request.data.get('rating')
+        if not rating or not (1 <= int(rating) <= 5):
+            return Response({
+                'error': 'Rating must be between 1 and 5'
+            }, status=400)
+        
+        # Check if feedback already exists
+        try:
+            feedback = OrderFeedback.objects.get(order=order)
+            created = False
+        except OrderFeedback.DoesNotExist:
+            # Create new feedback with rating
+            feedback = OrderFeedback(order=order, rating=rating)
+            created = True
+        
+        # Update feedback
+        feedback.rating = rating
+        feedback.comment = request.data.get('comment', '')
+        feedback.save()
+        
+        serializer = OrderFeedbackSerializer(feedback)
+        
+        return Response({
+            'message': 'Feedback submitted successfully' if created else 'Feedback updated successfully',
+            'feedback': serializer.data
+        })
+        
+    except Order.DoesNotExist:
+        return Response({'error': 'Order not found'}, status=404)
+    except ValueError:
+        return Response({'error': 'Invalid rating value'}, status=400)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+
+
+# Get feedback for an order
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_order_feedback(request, order_id):
+    try:
+        # For regular users, only allow access to their own orders
+        if not request.user.is_staff:
+            order = Order.objects.get(id=order_id, user=request.user)
+        else:
+            # Admin can access any order
+            order = Order.objects.get(id=order_id)
+        
+        try:
+            feedback = OrderFeedback.objects.get(order=order)
+            serializer = OrderFeedbackSerializer(feedback)
+            return Response(serializer.data)
+        except OrderFeedback.DoesNotExist:
+            return Response({'message': 'No feedback submitted yet'}, status=404)
+        
+    except Order.DoesNotExist:
+        return Response({'error': 'Order not found'}, status=404)
 

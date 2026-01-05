@@ -179,7 +179,7 @@ const OrdersAdmin = () => {
     );
 
   return (
-    <div className="w-11/12 sm:w-10/12 mx-auto p-6">
+    <div className="mx-auto">
       <h2 className="text-3xl font-bold text-[#339059] mb-8 text-center">
         Customer Orders
       </h2>
@@ -188,13 +188,14 @@ const OrdersAdmin = () => {
         <table className="min-w-full">
           <thead className="bg-[#339059] text-white">
             <tr>
-              <th className="px-4 py-3 text-left">Order ID</th>
-              <th className="px-4 py-3 text-left">Customer</th>
-              <th className="px-4 py-3 text-left">Phone</th>
-              <th className="px-4 py-3 text-left">Total</th>
-              <th className="px-4 py-3 text-left">Date</th>
-              <th className="px-4 py-3 text-left">Status</th>
-              <th className="px-4 py-3 text-left">Actions</th>
+              <th className="px-3 py-3 text-left">Order ID</th>
+              <th className="px-3 py-3 text-left">Customer</th>
+              <th className="px-3 py-3 text-left">Phone</th>
+              <th className="px-3 py-3 text-left">Total</th>
+              <th className="px-3 py-3 text-left">Date</th>
+              <th className="px-3 py-3 text-left">Status</th>
+              <th className="px-3 py-3 text-left">Feedback</th>
+              <th className="px-3 py-3 text-left">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -218,6 +219,29 @@ const OrdersAdmin = () => {
                       order.status.charAt(0).toUpperCase() +
                         order.status.slice(1)}
                   </span>
+                </td>
+                <td className="px-4 py-3">
+                  {order.feedback ? (
+                    <div
+                      className="flex items-center gap-1"
+                      title={`${order.feedback.rating}/5 stars`}
+                    >
+                      <svg
+                        className="w-5 h-5 text-yellow-400"
+                        fill="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                      </svg>
+                      <span className="text-sm font-semibold text-gray-700">
+                        {order.feedback.rating}
+                      </span>
+                    </div>
+                  ) : order.status.toLowerCase() === "delivered" ? (
+                    <span className="text-xs text-gray-400">No feedback</span>
+                  ) : (
+                    <span className="text-xs text-gray-300">-</span>
+                  )}
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex gap-2">
@@ -685,6 +709,91 @@ const OrdersAdmin = () => {
                   </p>
                 </div>
               )}
+
+              {/* Customer Feedback Section */}
+              {selectedOrder.feedback ? (
+                <div className="mt-6 p-4 bg-yellow-50 border-2 border-yellow-300 rounded-lg">
+                  <h4 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                    <svg
+                      className="w-5 h-5 text-yellow-600"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                    </svg>
+                    Customer Feedback
+                  </h4>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <svg
+                          key={star}
+                          className={`w-6 h-6 ${
+                            star <= selectedOrder.feedback.rating
+                              ? "text-yellow-400"
+                              : "text-gray-300"
+                          }`}
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                        </svg>
+                      ))}
+                    </div>
+                    <span className="text-sm font-semibold text-gray-700">
+                      {selectedOrder.feedback.rating}/5 Stars
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      ({selectedOrder.feedback.rating === 1 && "Poor"}
+                      {selectedOrder.feedback.rating === 2 && "Fair"}
+                      {selectedOrder.feedback.rating === 3 && "Good"}
+                      {selectedOrder.feedback.rating === 4 && "Very Good"}
+                      {selectedOrder.feedback.rating === 5 && "Excellent"})
+                    </span>
+                  </div>
+                  {selectedOrder.feedback.comment && (
+                    <div className="mb-2">
+                      <p className="text-sm font-medium text-gray-700 mb-1">
+                        Comment:
+                      </p>
+                      <p className="text-sm text-gray-800 bg-white p-3 rounded border border-yellow-200">
+                        {selectedOrder.feedback.comment}
+                      </p>
+                    </div>
+                  )}
+                  <p className="text-xs text-gray-500">
+                    Submitted on{" "}
+                    {new Date(
+                      selectedOrder.feedback.created_at
+                    ).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </div>
+              ) : selectedOrder.status.toLowerCase() === "delivered" ? (
+                <div className="mt-6 p-4 bg-gray-50 border border-gray-300 rounded-lg text-center">
+                  <svg
+                    className="w-12 h-12 mx-auto mb-2 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                    />
+                  </svg>
+                  <p className="text-gray-600 text-sm">
+                    No feedback submitted yet
+                  </p>
+                </div>
+              ) : null}
 
               <div className="mt-6 flex justify-between">
                 <div className="flex gap-2">

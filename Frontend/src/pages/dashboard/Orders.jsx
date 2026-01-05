@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import usePageTitle from "../../hooks/usePageTitle";
+import FeedbackModal from "../../components/FeedbackModal";
 
 const Orders = () => {
   usePageTitle("My Orders");
@@ -10,6 +11,7 @@ const Orders = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [feedbackModalOrder, setFeedbackModalOrder] = useState(null);
 
   const statusOptions = [
     {
@@ -112,6 +114,35 @@ const Orders = () => {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  const handleFeedbackSubmitted = () => {
+    fetchOrders();
+    if (selectedOrder) {
+      const updatedOrder = orders.find((o) => o.id === selectedOrder.id);
+      if (updatedOrder) {
+        setSelectedOrder(updatedOrder);
+      }
+    }
+  };
+
+  const StarDisplay = ({ rating }) => {
+    return (
+      <div className="flex items-center gap-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <svg
+            key={star}
+            className={`w-5 h-5 ${
+              star <= rating ? "text-yellow-400" : "text-gray-300"
+            }`}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+          </svg>
+        ))}
+      </div>
+    );
   };
 
   const getStatusColor = (status) => {
@@ -242,13 +273,48 @@ const Orders = () => {
                       </span>
                     )}
                   </div>
-                  <button
-                    onClick={() => fetchOrderDetails(order.id)}
-                    className="bg-[#339059] text-white px-4 py-2 rounded hover:bg-[#2E7D4F] transition-colors text-sm"
-                  >
-                    View Details
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => fetchOrderDetails(order.id)}
+                      className="bg-[#339059] text-white px-4 py-2 rounded hover:bg-[#2E7D4F] transition-colors text-sm"
+                    >
+                      View Details
+                    </button>
+                    {order.status.toLowerCase() === "delivered" && (
+                      <button
+                        onClick={() => setFeedbackModalOrder(order)}
+                        className={`px-4 py-2 rounded transition-colors text-sm font-medium ${
+                          order.feedback
+                            ? "bg-yellow-100 text-yellow-800 hover:bg-yellow-200"
+                            : "bg-blue-600 text-white hover:bg-blue-700"
+                        }`}
+                      >
+                        {order.feedback ? "Update Feedback" : "Leave Feedback"}
+                      </button>
+                    )}
+                  </div>
                 </div>
+
+                {/* Show existing feedback if available */}
+                {order.feedback && (
+                  <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold text-gray-800">
+                        Your Feedback
+                      </h4>
+                      <StarDisplay rating={order.feedback.rating} />
+                    </div>
+                    {order.feedback.comment && (
+                      <p className="text-sm text-gray-700 mt-2">
+                        {order.feedback.comment}
+                      </p>
+                    )}
+                    <p className="text-xs text-gray-500 mt-2">
+                      Submitted on{" "}
+                      {new Date(order.feedback.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -541,6 +607,66 @@ const Orders = () => {
                 </div>
               )}
 
+              {/* Feedback Section in Modal */}
+              {selectedOrder.status.toLowerCase() === "delivered" && (
+                <div className="mt-6">
+                  {selectedOrder.feedback ? (
+                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-lg font-semibold text-gray-800">
+                          Your Feedback
+                        </h4>
+                        <button
+                          onClick={() => {
+                            setFeedbackModalOrder(selectedOrder);
+                          }}
+                          className="text-sm bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-700 transition-colors"
+                        >
+                          Edit Feedback
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <StarDisplay rating={selectedOrder.feedback.rating} />
+                        <span className="text-sm text-gray-600">
+                          ({selectedOrder.feedback.rating === 1 && "Poor"}
+                          {selectedOrder.feedback.rating === 2 && "Fair"}
+                          {selectedOrder.feedback.rating === 3 && "Good"}
+                          {selectedOrder.feedback.rating === 4 && "Very Good"}
+                          {selectedOrder.feedback.rating === 5 && "Excellent"})
+                        </span>
+                      </div>
+                      {selectedOrder.feedback.comment && (
+                        <p className="text-sm text-gray-700 mb-2">
+                          {selectedOrder.feedback.comment}
+                        </p>
+                      )}
+                      <p className="text-xs text-gray-500">
+                        Submitted on{" "}
+                        {new Date(
+                          selectedOrder.feedback.created_at
+                        ).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="text-gray-700 mb-3">
+                        This order has been delivered. How was your experience?
+                      </p>
+                      <button
+                        onClick={() => setFeedbackModalOrder(selectedOrder)}
+                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+                      >
+                        Leave Feedback
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="mt-6 flex justify-end">
                 <button
                   onClick={() => setSelectedOrder(null)}
@@ -552,6 +678,15 @@ const Orders = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Feedback Modal */}
+      {feedbackModalOrder && (
+        <FeedbackModal
+          order={feedbackModalOrder}
+          onClose={() => setFeedbackModalOrder(null)}
+          onFeedbackSubmitted={handleFeedbackSubmitted}
+        />
       )}
     </div>
   );
