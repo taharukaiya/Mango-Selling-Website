@@ -61,16 +61,19 @@ class Payment(models.Model):
     payment_date = models.DateTimeField(auto_now_add=True)
 
 
-class OrderFeedback(models.Model):
-    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='feedback')
+class CategoryFeedback(models.Model):
+    order_item = models.OneToOneField(OrderItem, on_delete=models.CASCADE, related_name='feedback')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    mango_category = models.ForeignKey(MangoCategory, on_delete=models.CASCADE, related_name='feedbacks')
     rating = models.IntegerField(choices=[(1, '1 Star'), (2, '2 Stars'), (3, '3 Stars'), (4, '4 Stars'), (5, '5 Stars')])
     comment = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Feedback for Order #{self.order.id} - {self.rating} stars"
+        return f"Feedback for {self.mango_category.name} by {self.user.username} - {self.rating} stars"
     
     class Meta:
-        verbose_name = "Order Feedback"
-        verbose_name_plural = "Order Feedbacks"
+        verbose_name = "Category Feedback"
+        verbose_name_plural = "Category Feedbacks"
+        unique_together = ['order_item', 'user']

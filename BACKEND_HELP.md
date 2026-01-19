@@ -38,7 +38,7 @@ Located in: `backend/api/models.py`
 
 Models define what data you store. Each model = one database table.
 
-### **📊 Your 7 Database Tables:**
+### **📊 Your 8 Database Tables:**
 
 **1. UserProfile** (Extended user information)
 
@@ -99,6 +99,16 @@ Models define what data you store. Each model = one database table.
 - order → Which order
 - payment_status → "Pending", "Completed"
 - payment_date → When paid
+```
+
+**8. OrderFeedback** (Customer reviews for delivered orders)
+
+```python
+- order → One-to-one relationship with Order
+- rating → Star rating (1-5)
+- comment → Optional text feedback
+- created_at → When feedback was submitted
+- updated_at → When feedback was last modified
 ```
 
 ---
@@ -182,22 +192,42 @@ Located in: `backend/api/views.py` and `backend/api/urls.py`
 #### **10. Get User Orders** - `/api/user-orders-with-items/`
 
 - **Method:** GET
-- **Output:** All orders with full details (items, prices, dates)
+- **Output:** All orders with full details (items, prices, dates, feedback)
+
+#### **11. Submit Order Feedback** - `/api/order/{order_id}/feedback/`
+
+- **Method:** POST/PUT
+- **What it does:** Submit or update feedback for a delivered order
+- **Input:** rating (1-5), comment (optional)
+- **Validation:** Order must be delivered and belong to user
+- **Code flow:**
+  1. Verify order belongs to logged-in user
+  2. Check order status is "delivered"
+  3. Validate rating (1-5)
+  4. Create or update feedback
+  5. Return success with feedback data
+
+#### **12. Get Order Feedback** - `/api/order/{order_id}/get-feedback/`
+
+- **Method:** GET
+- **What it does:** Retrieve feedback for a specific order
+- **Output:** Feedback with rating, comment, timestamps
+- **Access:** User can see own feedback, admin can see all
 
 ---
 
 ### **🔒 Admin APIs (Only Admin Can Access):**
 
-#### **11. Manage Mangoes** - `/api/mangoes/`
+#### **13. Manage Mangoes** - `/api/mangoes/`
 
 - **POST:** Add new mango product
 - **PUT:** Update existing mango
 - **DELETE:** Remove mango
 
-#### **12. View All Orders** - `/api/admin-orders-details/`
+#### **14. View All Orders** - `/api/admin-orders-details/`
 
 - **Method:** GET
-- **Output:** All customer orders with full details
+- **Output:** All customer orders with full details including feedback
 
 ---
 
@@ -265,9 +295,26 @@ User fills address form
 ```
 User goes to Orders page
 → Frontend calls GET /api/user-orders-with-items/
-→ Backend queries Orders with related OrderItems
+→ Backend queries Orders with related OrderItems and Feedback
 → Returns complete order history
 → Frontend displays order cards
+```
+
+### **Step 7: Submit Feedback (for delivered orders)**
+
+```
+User clicks "Leave Feedback" on delivered order
+→ Modal opens with star rating and comment box
+→ User selects 5 stars and writes "Excellent mangoes!"
+→ Frontend sends POST /api/order/10/feedback/
+   Body: {rating: 5, comment: "Excellent mangoes!"}
+→ Backend:
+  1. Verifies order #10 belongs to this user
+  2. Checks order status is "delivered"
+  3. Creates OrderFeedback(order=10, rating=5, comment="Excellent mangoes!")
+→ Returns success
+→ Frontend shows feedback on order card
+→ Admin can see feedback in admin panel
 ```
 
 ---
@@ -312,7 +359,7 @@ User goes to Orders page
 
 | File             | Purpose                                       |
 | ---------------- | --------------------------------------------- |
-| `models.py`      | Database structure (7 tables)                 |
+| `models.py`      | Database structure (8 tables)                 |
 | `views.py`       | Business logic (what happens when API called) |
 | `serializers.py` | Converts database objects ↔ JSON              |
 | `urls.py`        | Maps URLs to views                            |
@@ -419,6 +466,9 @@ python manage.py shell -c "from django.contrib.auth.models import User; print(Us
 # Show all orders
 python manage.py shell -c "from api.models import Order; print(Order.objects.all().values('id', 'user__username', 'total_amount', 'status'))"
 
+# Show all feedback
+python manage.py shell -c "from api.models import OrderFeedback; print(OrderFeedback.objects.all().values('order__id', 'rating', 'comment'))"
+
 # Clear all orders and users (keep superusers)
 python manage.py shell -c "from django.contrib.auth.models import User; from api.models import Order, CartItem; Order.objects.all().delete(); CartItem.objects.all().delete(); User.objects.filter(is_superuser=False).delete()"
 ```
@@ -431,8 +481,9 @@ Access at: `http://localhost:8000/admin`
 
 **Features:**
 
-- Manage users, mangoes, orders, payments
+- Manage users, mangoes, orders, payments, feedback
 - View all database records
+- See customer feedback inline with orders
 - Add/edit/delete data without coding
 - User-friendly interface
 
@@ -533,6 +584,7 @@ Response: {
 - `User ↔ Cart` - Each user has exactly one cart
 - `User ↔ UserProfile` - Each user has one profile
 - `Order ↔ Payment` - Each order has one payment record
+- `Order ↔ OrderFeedback` - Each order can have one feedback
 
 ### **One-to-Many Relationship:**
 
@@ -552,10 +604,11 @@ User "John"
   ├── Cart
   │     ├── CartItem 1 (Fazli, 2kg)
   │     └── CartItem 2 (Langra, 3kg)
-  ├── Order #1
+  ├── Order #1 (Delivered)
   │     ├── OrderItem (Fazli, 2kg, ₹200)
-  │     └── OrderItem (Himsagar, 1kg, ₹150)
-  └── Order #2
+  │     ├── OrderItem (Himsagar, 1kg, ₹150)
+  │     └── OrderFeedback (5 stars, "Excellent quality!")
+  └── Order #2 (Pending)
         └── OrderItem (Langra, 5kg, ₹180)
 ```
 
@@ -633,7 +686,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 🎯 **The Elevator Pitch:**
 
-"The backend is the brain of our Mango Mart website. It stores all data securely in PostgreSQL database, provides 12+ REST APIs for the frontend to communicate, handles user authentication with tokens, and manages the entire business logic from user registration to order processing. Built with Django framework for rapid development, security, and scalability."
+"The backend is the brain of our Mango Mart website. It stores all data securely in PostgreSQL database with 8 models, provides 14+ REST APIs for the frontend to communicate, handles user authentication with tokens, and manages the entire business logic from user registration to order processing and customer feedback. Built with Django framework for rapid development, security, and scalability."
 
 ### **Key Points to Emphasize:**
 
@@ -695,8 +748,8 @@ Potential improvements to discuss:
 2. **Email Notifications:** Send order confirmations
 3. **Stock Management:** Auto-decrease stock after order
 4. **Order Tracking:** Real-time status updates
-5. **Analytics Dashboard:** Sales reports, popular products
-6. **Reviews & Ratings:** Let users rate mangoes
+5. **Analytics Dashboard:** Sales reports, popular products, feedback analytics
+6. **Product Reviews:** Let users rate individual mangoes (separate from order feedback)
 7. **Discount Coupons:** Promotional codes
 8. **Search & Filter:** Advanced product search
 9. **Wishlist Feature:** Save favorite products

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 
-const FeedbackModal = ({ order, onClose, onFeedbackSubmitted }) => {
+const FeedbackModal = ({ orderItem, onClose, onFeedbackSubmitted }) => {
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
   const [comment, setComment] = useState("");
@@ -10,12 +10,12 @@ const FeedbackModal = ({ order, onClose, onFeedbackSubmitted }) => {
 
   useEffect(() => {
     // Load existing feedback if any
-    if (order?.feedback) {
-      setExistingFeedback(order.feedback);
-      setRating(order.feedback.rating);
-      setComment(order.feedback.comment || "");
+    if (orderItem?.feedback) {
+      setExistingFeedback(orderItem.feedback);
+      setRating(orderItem.feedback.rating);
+      setComment(orderItem.feedback.comment || "");
     }
-  }, [order]);
+  }, [orderItem]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,7 +30,7 @@ const FeedbackModal = ({ order, onClose, onFeedbackSubmitted }) => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `http://127.0.0.1:8000/api/order/${order.id}/feedback/`,
+        `http://127.0.0.1:8000/api/order-item/${orderItem.id}/feedback/`,
         {
           method: existingFeedback ? "PUT" : "POST",
           headers: {
@@ -41,7 +41,7 @@ const FeedbackModal = ({ order, onClose, onFeedbackSubmitted }) => {
             rating,
             comment,
           }),
-        }
+        },
       );
 
       if (response.ok) {
@@ -91,7 +91,7 @@ const FeedbackModal = ({ order, onClose, onFeedbackSubmitted }) => {
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-2xl font-bold text-[#339059]">
-              {existingFeedback ? "Update Your Feedback" : "Rate Your Order"}
+              {existingFeedback ? "Update Your Feedback" : "Rate This Product"}
             </h3>
             <button
               onClick={onClose}
@@ -113,13 +113,29 @@ const FeedbackModal = ({ order, onClose, onFeedbackSubmitted }) => {
             </button>
           </div>
 
-          {/* Order Info */}
+          {/* Product Info */}
           <div className="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
-            <p className="text-sm text-gray-600">Order Number</p>
-            <p className="font-bold text-lg text-[#339059]">#{order.id}</p>
-            <p className="text-sm text-gray-600 mt-2">
-              Total: ৳{order.total_amount}
-            </p>
+            <div className="flex items-center gap-4">
+              {orderItem.mango_image && (
+                <img
+                  src={`http://127.0.0.1:8000${orderItem.mango_image}`}
+                  alt={orderItem.mango_name}
+                  className="w-20 h-20 object-cover rounded-lg"
+                />
+              )}
+              <div>
+                <p className="font-bold text-lg text-[#339059]">
+                  {orderItem.mango_name}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Quantity: {orderItem.quantity} kg | Price: ৳{orderItem.price}
+                  /kg
+                </p>
+                <p className="text-sm font-semibold text-gray-700">
+                  Subtotal: ৳{orderItem.subtotal}
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Feedback Form */}
@@ -186,8 +202,8 @@ const FeedbackModal = ({ order, onClose, onFeedbackSubmitted }) => {
                 {submitting
                   ? "Submitting..."
                   : existingFeedback
-                  ? "Update Feedback"
-                  : "Submit Feedback"}
+                    ? "Update Feedback"
+                    : "Submit Feedback"}
               </button>
             </div>
           </form>

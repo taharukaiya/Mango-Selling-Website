@@ -11,7 +11,7 @@ const Orders = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [feedbackModalOrder, setFeedbackModalOrder] = useState(null);
+  const [feedbackModalItem, setFeedbackModalItem] = useState(null);
 
   const statusOptions = [
     {
@@ -70,7 +70,7 @@ const Orders = () => {
           headers: {
             Authorization: `Token ${token}`,
           },
-        }
+        },
       );
 
       if (response.ok) {
@@ -224,7 +224,7 @@ const Orders = () => {
                   <div className="text-right">
                     <span
                       className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
-                        order.status
+                        order.status,
                       )}`}
                     >
                       {statusOptions.find((opt) => opt.value === order.status)
@@ -280,41 +280,10 @@ const Orders = () => {
                     >
                       View Details
                     </button>
-                    {order.status.toLowerCase() === "delivered" && (
-                      <button
-                        onClick={() => setFeedbackModalOrder(order)}
-                        className={`px-4 py-2 rounded transition-colors text-sm font-medium ${
-                          order.feedback
-                            ? "bg-yellow-100 text-yellow-800 hover:bg-yellow-200"
-                            : "bg-blue-600 text-white hover:bg-blue-700"
-                        }`}
-                      >
-                        {order.feedback ? "Update Feedback" : "Leave Feedback"}
-                      </button>
-                    )}
                   </div>
                 </div>
 
-                {/* Show existing feedback if available */}
-                {order.feedback && (
-                  <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-semibold text-gray-800">
-                        Your Feedback
-                      </h4>
-                      <StarDisplay rating={order.feedback.rating} />
-                    </div>
-                    {order.feedback.comment && (
-                      <p className="text-sm text-gray-700 mt-2">
-                        {order.feedback.comment}
-                      </p>
-                    )}
-                    <p className="text-xs text-gray-500 mt-2">
-                      Submitted on{" "}
-                      {new Date(order.feedback.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                )}
+                {/* Show existing feedback if available - removed from main list */}
               </div>
             </div>
           ))}
@@ -366,11 +335,11 @@ const Orders = () => {
                     <p className="text-sm text-gray-600">Order Status</p>
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                        selectedOrder.status
+                        selectedOrder.status,
                       )}`}
                     >
                       {statusOptions.find(
-                        (opt) => opt.value === selectedOrder.status
+                        (opt) => opt.value === selectedOrder.status,
                       )?.label || selectedOrder.status}
                     </span>
                   </div>
@@ -455,102 +424,141 @@ const Orders = () => {
                   </h4>
                   <div className="space-y-4">
                     {selectedOrder.items.map((item, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-50 to-yellow-50 rounded-lg border border-green-200 hover:shadow-md transition-shadow"
-                      >
-                        <div className="flex-shrink-0">
-                          <div className="w-16 h-16 bg-[#339059] text-white rounded-full flex items-center justify-center font-bold text-lg">
-                            {index + 1}
+                      <div key={index}>
+                        <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-50 to-yellow-50 rounded-lg border border-green-200 hover:shadow-md transition-shadow">
+                          <div className="flex-shrink-0">
+                            <div className="w-16 h-16 bg-[#339059] text-white rounded-full flex items-center justify-center font-bold text-lg">
+                              {index + 1}
+                            </div>
+                          </div>
+
+                          {item.mango_image ? (
+                            <img
+                              src={`http://127.0.0.1:8000${item.mango_image}`}
+                              alt={item.mango_category}
+                              className="w-16 h-16 object-cover rounded-lg shadow-md"
+                              onError={(e) => {
+                                e.target.style.display = "none";
+                              }}
+                            />
+                          ) : (
+                            <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
+                              <svg
+                                className="w-8 h-8 text-gray-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                />
+                              </svg>
+                            </div>
+                          )}
+
+                          <div className="flex-1">
+                            <h5 className="text-lg font-bold text-gray-800 mb-1">
+                              {item.mango_category ||
+                                item.mango_name ||
+                                "Mango"}
+                            </h5>
+                            {item.description && (
+                              <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+                                {item.description}
+                              </p>
+                            )}
+                            <div className="flex items-center gap-4 text-sm">
+                              <div className="flex items-center gap-1">
+                                <svg
+                                  className="w-4 h-4 text-[#339059]"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M20 7l-8-4-8 4m16 0l-8 4-8-4m16 0v10l-8 4-8-4V7"
+                                  />
+                                </svg>
+                                <span className="font-medium text-gray-700">
+                                  Quantity: {item.quantity} kg
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <svg
+                                  className="w-4 h-4 text-[#339059]"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                                  />
+                                </svg>
+                                <span className="font-medium text-gray-700">
+                                  ৳{item.price || 0} per kg
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="text-right">
+                            <div className="text-xl font-bold text-[#339059] mb-1">
+                              ৳
+                              {item.subtotal ||
+                                (item.quantity * (item.price || 0)).toFixed(2)}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              Item Total
+                            </div>
                           </div>
                         </div>
 
-                        {item.mango_image ? (
-                          <img
-                            src={`http://127.0.0.1:8000${item.mango_image}`}
-                            alt={item.mango_category}
-                            className="w-16 h-16 object-cover rounded-lg shadow-md"
-                            onError={(e) => {
-                              e.target.style.display = "none";
-                            }}
-                          />
-                        ) : (
-                          <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
-                            <svg
-                              className="w-8 h-8 text-gray-400"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                              />
-                            </svg>
+                        {/* Feedback section for each item */}
+                        {selectedOrder.status.toLowerCase() === "delivered" && (
+                          <div className="mt-2 ml-20">
+                            {item.feedback ? (
+                              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm font-semibold text-gray-700">
+                                      Your Rating:
+                                    </span>
+                                    <StarDisplay
+                                      rating={item.feedback.rating}
+                                    />
+                                  </div>
+                                  <button
+                                    onClick={() => setFeedbackModalItem(item)}
+                                    className="text-xs bg-yellow-600 text-white px-2 py-1 rounded hover:bg-yellow-700 transition-colors"
+                                  >
+                                    Edit
+                                  </button>
+                                </div>
+                                {item.feedback.comment && (
+                                  <p className="text-xs text-gray-700 mt-1">
+                                    {item.feedback.comment}
+                                  </p>
+                                )}
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setFeedbackModalItem(item)}
+                                className="w-full bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 transition-colors text-sm"
+                              >
+                                Rate this product
+                              </button>
+                            )}
                           </div>
                         )}
-
-                        <div className="flex-1">
-                          <h5 className="text-lg font-bold text-gray-800 mb-1">
-                            {item.mango_category || item.mango_name || "Mango"}
-                          </h5>
-                          {item.description && (
-                            <p className="text-sm text-gray-600 mb-2 line-clamp-2">
-                              {item.description}
-                            </p>
-                          )}
-                          <div className="flex items-center gap-4 text-sm">
-                            <div className="flex items-center gap-1">
-                              <svg
-                                className="w-4 h-4 text-[#339059]"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M20 7l-8-4-8 4m16 0l-8 4-8-4m16 0v10l-8 4-8-4V7"
-                                />
-                              </svg>
-                              <span className="font-medium text-gray-700">
-                                Quantity: {item.quantity} kg
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <svg
-                                className="w-4 h-4 text-[#339059]"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
-                                />
-                              </svg>
-                              <span className="font-medium text-gray-700">
-                                ৳{item.price || 0} per kg
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="text-right">
-                          <div className="text-xl font-bold text-[#339059] mb-1">
-                            ৳
-                            {item.subtotal ||
-                              (item.quantity * (item.price || 0)).toFixed(2)}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            Item Total
-                          </div>
-                        </div>
                       </div>
                     ))}
 
@@ -607,66 +615,6 @@ const Orders = () => {
                 </div>
               )}
 
-              {/* Feedback Section in Modal */}
-              {selectedOrder.status.toLowerCase() === "delivered" && (
-                <div className="mt-6">
-                  {selectedOrder.feedback ? (
-                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-lg font-semibold text-gray-800">
-                          Your Feedback
-                        </h4>
-                        <button
-                          onClick={() => {
-                            setFeedbackModalOrder(selectedOrder);
-                          }}
-                          className="text-sm bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-700 transition-colors"
-                        >
-                          Edit Feedback
-                        </button>
-                      </div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <StarDisplay rating={selectedOrder.feedback.rating} />
-                        <span className="text-sm text-gray-600">
-                          ({selectedOrder.feedback.rating === 1 && "Poor"}
-                          {selectedOrder.feedback.rating === 2 && "Fair"}
-                          {selectedOrder.feedback.rating === 3 && "Good"}
-                          {selectedOrder.feedback.rating === 4 && "Very Good"}
-                          {selectedOrder.feedback.rating === 5 && "Excellent"})
-                        </span>
-                      </div>
-                      {selectedOrder.feedback.comment && (
-                        <p className="text-sm text-gray-700 mb-2">
-                          {selectedOrder.feedback.comment}
-                        </p>
-                      )}
-                      <p className="text-xs text-gray-500">
-                        Submitted on{" "}
-                        {new Date(
-                          selectedOrder.feedback.created_at
-                        ).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })}
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                      <p className="text-gray-700 mb-3">
-                        This order has been delivered. How was your experience?
-                      </p>
-                      <button
-                        onClick={() => setFeedbackModalOrder(selectedOrder)}
-                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
-                      >
-                        Leave Feedback
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-
               <div className="mt-6 flex justify-end">
                 <button
                   onClick={() => setSelectedOrder(null)}
@@ -681,10 +629,10 @@ const Orders = () => {
       )}
 
       {/* Feedback Modal */}
-      {feedbackModalOrder && (
+      {feedbackModalItem && (
         <FeedbackModal
-          order={feedbackModalOrder}
-          onClose={() => setFeedbackModalOrder(null)}
+          orderItem={feedbackModalItem}
+          onClose={() => setFeedbackModalItem(null)}
           onFeedbackSubmitted={handleFeedbackSubmitted}
         />
       )}

@@ -8,8 +8,8 @@ from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 from rest_framework.authtoken.views import ObtainAuthToken
 
-from .models import MangoCategory, Cart, CartItem, Order, OrderItem, Payment, UserProfile, OrderFeedback
-from .serializers import MangoCategorySerializer, CartItemSerializer, OrderSerializer, OrderWithItemsSerializer, PaymentSerializer, UserProfileSerializer, OrderFeedbackSerializer
+from .models import MangoCategory, Cart, CartItem, Order, OrderItem, Payment, UserProfile, CategoryFeedback
+from .serializers import MangoCategorySerializer, CartItemSerializer, OrderSerializer, OrderWithItemsSerializer, PaymentSerializer, UserProfileSerializer, CategoryFeedbackSerializer
 
 class MangoCategoryViewSet(viewsets.ModelViewSet):
     queryset = MangoCategory.objects.all()
@@ -318,16 +318,22 @@ def get_all_orders_with_details(request):
     return Response(serializer.data)
 
 
-# Submit or update feedback for an order
+# Submit or update feedback for a specific order item (mango category in an order)
 @api_view(['POST', 'PUT'])
 @permission_classes([IsAuthenticated])
-def submit_order_feedback(request, order_id):
+def submit_category_feedback(request, order_item_id):
     try:
+        # Get the order item and ensure it belongs to the user's order
+        order_item = OrderItem.objects.select_related('order', 'mango').get(id=order_item_id)
+        
         # Ensure the order belongs to the user
-        order = Order.objects.get(id=order_id, user=request.user)
+        if order_item.order.user != request.user:
+            return Response({
+                'error': 'You do not have permission to give feedback for this item'
+            }, status=403)
         
         # Check if order is delivered
-        if order.status.lower() != 'delivered':
+        if order_item.order.status.lower() != 'delivered':
             return Response({
                 'error': 'Feedback can only be submitted for delivered orders'
             }, status=400)
@@ -341,11 +347,16 @@ def submit_order_feedback(request, order_id):
         
         # Check if feedback already exists
         try:
-            feedback = OrderFeedback.objects.get(order=order)
+            feedback = CategoryFeedback.objects.get(order_item=order_item, user=request.user)
             created = False
-        except OrderFeedback.DoesNotExist:
+        except CategoryFeedback.DoesNotExist:
             # Create new feedback with rating
-            feedback = OrderFeedback(order=order, rating=rating)
+            feedback = CategoryFeedback(
+                order_item=order_item,
+                user=request.user,
+                mango_category=order_item.mango,
+                rating=rating
+            )
             created = True
         
         # Update feedback
@@ -353,40 +364,75 @@ def submit_order_feedback(request, order_id):
         feedback.comment = request.data.get('comment', '')
         feedback.save()
         
-        serializer = OrderFeedbackSerializer(feedback)
+        serializer = CategoryFeedbackSerializer(feedback)
         
         return Response({
             'message': 'Feedback submitted successfully' if created else 'Feedback updated successfully',
             'feedback': serializer.data
         })
         
-    except Order.DoesNotExist:
-        return Response({'error': 'Order not found'}, status=404)
+    except OrderItem.DoesNotExist:
+        return Response({'error': 'Order item not found'}, status=404)
     except ValueError:
         return Response({'error': 'Invalid rating value'}, status=400)
     except Exception as e:
         return Response({'error': str(e)}, status=500)
 
 
-# Get feedback for an order
+# Get feedback for a specific order item
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def get_order_feedback(request, order_id):
+def get_category_feedback(request, order_item_id):
     try:
+        # Get the order item
+        order_item = OrderItem.objects.select_related('order').get(id=order_item_id)
+        
         # For regular users, only allow access to their own orders
-        if not request.user.is_staff:
-            order = Order.objects.get(id=order_id, user=request.user)
-        else:
-            # Admin can access any order
-            order = Order.objects.get(id=order_id)
+        if not request.user.is_staff and order_item.order.user != request.user:
+            return Response({'error': 'Permission denied'}, status=403)
         
         try:
-            feedback = OrderFeedback.objects.get(order=order)
-            serializer = OrderFeedbackSerializer(feedback)
+            feedback = CategoryFeedback.objects.get(order_item=order_item)
+            serializer = CategoryFeedbackSerializer(feedback)
             return Response(serializer.data)
-        except OrderFeedback.DoesNotExist:
+        except CategoryFeedback.DoesNotExist:
             return Response({'message': 'No feedback submitted yet'}, status=404)
         
-    except Order.DoesNotExist:
-        return Response({'error': 'Order not found'}, status=404)
+    except OrderItem.DoesNotExist:
+        return Response({'error': 'Order item not found'}, status=404)
+
+
+# Get all feedbacks for a specific mango category (for display on category page)
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_mango_category_feedbacks(request, mango_id):
+    try:
+        mango = MangoCategory.objects.get(id=mango_id)
+        feedbacks = CategoryFeedback.objects.filter(mango_category=mango).select_related('user').order_by('-created_at')
+        serializer = CategoryFeedbackSerializer(feedbacks, many=True)
+        
+        # Calculate statistics
+        if feedbacks:
+            ratings = [f.rating for f in feedbacks]
+            avg_rating = round(sum(ratings) / len(ratings), 1)
+        else:
+            avg_rating = 0
+        
+        return Response({
+            'feedbacks': serializer.data,
+            'average_rating': avg_rating,
+            'total_ratings': feedbacks.count()
+        })
+        
+    except MangoCategory.DoesNotExist:
+        return Response({'error': 'Mango category not found'}, status=404)
+
+
+# Get all feedbacks (admin only)
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def get_all_feedbacks(request):
+    feedbacks = CategoryFeedback.objects.all().select_related('user', 'mango_category', 'order_item__order').order_by('-created_at')
+    serializer = CategoryFeedbackSerializer(feedbacks, many=True)
+    return Response(serializer.data)
 
